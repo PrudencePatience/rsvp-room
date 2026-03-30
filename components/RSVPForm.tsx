@@ -1,15 +1,16 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useWriteContract } from "wagmi";
 import type { EventItem } from "@/lib/mock-data";
 import { baseRsvpAbi, baseRsvpContractAddress } from "@/lib/contracts";
 import { StatusChip } from "@/components/StatusChip";
 import { trackTransaction } from "@/utils/track";
-import { baseBuilderCode } from "@/lib/base-app";
+import { baseBuilderCode, baseBuilderDataSuffix } from "@/lib/base-app";
 
 export function RSVPForm({ event }: { event: EventItem }) {
   const { address, isConnected } = useAccount();
+  const publicClient = usePublicClient();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
@@ -43,11 +44,13 @@ export function RSVPForm({ event }: { event: EventItem }) {
         address: baseRsvpContractAddress,
         abi: baseRsvpAbi,
         functionName: "join",
+        dataSuffix: baseBuilderDataSuffix,
       });
 
-      await trackTransaction("app-001", "RSVP Room", address, hash);
       setTxHash(hash);
-      setFeedback("RSVP confirmed. ERC-8021 attribution is active for this transaction.");
+      await publicClient?.waitForTransactionReceipt({ hash });
+      await trackTransaction("app-001", "RSVP Room", address, hash);
+      setFeedback("RSVP confirmed. ERC-8021 attribution is active for this confirmed transaction.");
     } catch {
       setFeedback("The RSVP transaction could not be completed.");
     }
@@ -94,7 +97,7 @@ export function RSVPForm({ event }: { event: EventItem }) {
           </div>
           <div className="meta-card">
             <strong>Attribution</strong>
-            <span>ERC-8021 enabled</span>
+            <span>Explicit ERC-8021 suffix</span>
           </div>
         </div>
 
@@ -115,14 +118,24 @@ export function RSVPForm({ event }: { event: EventItem }) {
           >
             <div>{feedback}</div>
             {txHash ? (
-              <a
-                href={`https://basescan.org/tx/${txHash}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ display: "inline-block", marginTop: 10, color: "var(--primary)", textDecoration: "underline" }}
-              >
-                View transaction hash
-              </a>
+              <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                <a
+                  href={`https://basescan.org/tx/${txHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "var(--primary)", textDecoration: "underline" }}
+                >
+                  View transaction hash
+                </a>
+                <a
+                  href={`https://builder-code-checker.vercel.app/?txHash=${txHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "var(--primary)", textDecoration: "underline" }}
+                >
+                  Open builder code checker
+                </a>
+              </div>
             ) : null}
           </div>
         ) : null}

@@ -1,12 +1,14 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { baseRsvpAbi, baseRsvpContractAddress } from "@/lib/contracts";
 import { trackTransaction } from "@/utils/track";
+import { baseBuilderDataSuffix } from "@/lib/base-app";
 
 export function RSVPButton({ eventId, fullWidth = false }: { eventId: string; fullWidth?: boolean }) {
   const { address, isConnected } = useAccount();
+  const publicClient = usePublicClient();
   const { writeContractAsync, isPending } = useWriteContract();
 
   async function handleJoin() {
@@ -15,8 +17,10 @@ export function RSVPButton({ eventId, fullWidth = false }: { eventId: string; fu
         address: baseRsvpContractAddress,
         abi: baseRsvpAbi,
         functionName: "join",
+        dataSuffix: baseBuilderDataSuffix,
       });
 
+      await publicClient?.waitForTransactionReceipt({ hash });
       await trackTransaction("app-001", "RSVP Room", address, hash);
     } catch {
       // Keep the CTA responsive even if the transaction is rejected.
@@ -43,4 +47,3 @@ export function RSVPButton({ eventId, fullWidth = false }: { eventId: string; fu
     </button>
   );
 }
-
