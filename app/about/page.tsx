@@ -1,4 +1,6 @@
-﻿export default function AboutPage() {
+﻿import { baseAppUrl, baseBuilderCode, baseBuilderDataSuffix, baseContractExplorerUrl } from "@/lib/base-app";
+
+export default function AboutPage() {
   return (
     <main className="page-grid fade-in">
       <section
@@ -19,10 +21,28 @@
             <div className="meta-card"><strong>Confirmation</strong><span>A success state appears after the transaction is mined.</span></div>
             <div className="meta-card"><strong>Status</strong><span>Your registered rooms are grouped in the My Events page.</span></div>
             <div className="meta-card"><strong>Privacy</strong><span>Only the minimum RSVP details are requested in the form.</span></div>
+            <div className="meta-card"><strong>Builder code</strong><span>{baseBuilderCode}</span></div>
+            <div className="meta-card"><strong>ERC-8021</strong><span>Transactions include the Base attribution suffix.</span></div>
+          </div>
+
+          <div
+            style={{
+              padding: 16,
+              borderRadius: 22,
+              background: "rgba(241,245,251,0.92)",
+              border: "1px solid rgba(26,61,124,0.1)",
+              display: "grid",
+              gap: 10,
+            }}
+          >
+            <strong>Attribution readiness</strong>
+            <span style={{ color: "var(--muted)" }}>Primary app URL: {baseAppUrl}</span>
+            <span style={{ color: "var(--muted)" }}>Contract: {baseContractExplorerUrl}</span>
+            <span style={{ color: "var(--muted)", wordBreak: "break-all" }}>Data suffix: {baseBuilderDataSuffix}</span>
+            <span style={{ color: "var(--muted)" }}>Transaction analytics will populate in Base after attributed transactions are indexed.</span>
           </div>
         </div>
       </section>
     </main>
   );
 }
-

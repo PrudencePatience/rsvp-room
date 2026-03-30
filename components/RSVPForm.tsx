@@ -6,6 +6,7 @@ import type { EventItem } from "@/lib/mock-data";
 import { baseRsvpAbi, baseRsvpContractAddress } from "@/lib/contracts";
 import { StatusChip } from "@/components/StatusChip";
 import { trackTransaction } from "@/utils/track";
+import { baseBuilderCode } from "@/lib/base-app";
 
 export function RSVPForm({ event }: { event: EventItem }) {
   const { address, isConnected } = useAccount();
@@ -13,6 +14,7 @@ export function RSVPForm({ event }: { event: EventItem }) {
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
   const { writeContractAsync, isPending } = useWriteContract();
   const joinedQuery = useReadContract({
     address: baseRsvpContractAddress,
@@ -24,6 +26,7 @@ export function RSVPForm({ event }: { event: EventItem }) {
 
   async function handleSubmit(eventObject: React.FormEvent<HTMLFormElement>) {
     eventObject.preventDefault();
+    setTxHash(null);
 
     if (!isConnected || !address) {
       setFeedback("Connect your wallet to continue.");
@@ -43,7 +46,8 @@ export function RSVPForm({ event }: { event: EventItem }) {
       });
 
       await trackTransaction("app-001", "RSVP Room", address, hash);
-      setFeedback("RSVP confirmed. Your attendance was submitted onchain.");
+      setTxHash(hash);
+      setFeedback("RSVP confirmed. ERC-8021 attribution is active for this transaction.");
     } catch {
       setFeedback("The RSVP transaction could not be completed.");
     }
@@ -84,6 +88,14 @@ export function RSVPForm({ event }: { event: EventItem }) {
             <strong>Wallet</strong>
             <span>{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected"}</span>
           </div>
+          <div className="meta-card">
+            <strong>Builder code</strong>
+            <span>{baseBuilderCode}</span>
+          </div>
+          <div className="meta-card">
+            <strong>Attribution</strong>
+            <span>ERC-8021 enabled</span>
+          </div>
         </div>
 
         <button type="submit" className="button-primary" disabled={isPending}>
@@ -101,11 +113,20 @@ export function RSVPForm({ event }: { event: EventItem }) {
               fontWeight: 600,
             }}
           >
-            {feedback}
+            <div>{feedback}</div>
+            {txHash ? (
+              <a
+                href={`https://basescan.org/tx/${txHash}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ display: "inline-block", marginTop: 10, color: "var(--primary)", textDecoration: "underline" }}
+              >
+                View transaction hash
+              </a>
+            ) : null}
           </div>
         ) : null}
       </form>
     </section>
   );
 }
-
